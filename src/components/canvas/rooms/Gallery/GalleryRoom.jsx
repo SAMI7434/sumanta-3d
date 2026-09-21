@@ -71,6 +71,56 @@ const FALLBACK_PROJECTS = [
         description: 'A fast, modern personal bio page serving as a central hub for my digital footprint. It showcases my latest coding projects, web development services, YouTube videos, and recommended music artists.',
         techStack: ['/textures/gallery/htmllogo.webp', '/textures/gallery/csslogo.webp', '/textures/gallery/jslogo.webp', '/textures/gallery/netlifylogo.webp']
     },
+    {
+        id: 'project-3',
+        title: 'PROJECT 3',
+        front: '/textures/gallery/3.webp',
+        painted: '/textures/gallery/3.webp',
+        url: '/textures/gallery/3.webp',
+        description: 'A new project added to the gallery.',
+        techStack: [],
+        imageOnly: true
+    },
+    {
+        id: 'dr-sumit-4',
+        title: 'DR SUMIT 4',
+        front: '/textures/gallery/dr-sumit-4.webp',
+        painted: '/textures/gallery/dr-sumit-4.webp',
+        url: '/textures/gallery/dr-sumit-4.webp',
+        description: 'A new project added to the gallery.',
+        techStack: [],
+        imageOnly: true
+    },
+    {
+        id: 'drv3',
+        title: 'DRV3',
+        front: '/textures/gallery/drv3.webp',
+        painted: '/textures/gallery/drv3.webp',
+        url: '/textures/gallery/drv3.webp',
+        description: 'A new project added to the gallery.',
+        techStack: [],
+        imageOnly: true
+    },
+    {
+        id: 'ivf-dr-tanushree-5-v1',
+        title: 'IVF DR TANUSHREE 5 V1',
+        front: '/textures/gallery/ivf-dr-tanushree-5-v1.webp',
+        painted: '/textures/gallery/ivf-dr-tanushree-5-v1.webp',
+        url: '/textures/gallery/ivf-dr-tanushree-5-v1.webp',
+        description: 'A new project added to the gallery.',
+        techStack: [],
+        imageOnly: true
+    },
+    {
+        id: 'ogxjpr-kveq-hd',
+        title: 'OGXJPR KVEQ HD',
+        front: '/textures/gallery/ogxjpr-kveq-hd.webp',
+        painted: '/textures/gallery/ogxjpr-kveq-hd.webp',
+        url: '/textures/gallery/ogxjpr-kveq-hd.webp',
+        description: 'A new project added to the gallery.',
+        techStack: [],
+        imageOnly: true
+    },
 ];
 
 const PROJECT_COUNT = 10; // Keep the count for the infinite scroll feel
@@ -210,7 +260,21 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
 
     // Pobieranie danych z Sanity.io (fallback do starych danych)
     const sanityProjects = useGalleryProjects();
-    const activeProjects = sanityProjects || FALLBACK_PROJECTS;
+    const localProjects = FALLBACK_PROJECTS.filter(project => [
+        'project-3',
+        'dr-sumit-4',
+        'drv3',
+        'ivf-dr-tanushree-5-v1',
+        'ogxjpr-kveq-hd'
+    ].includes(project.id));
+    const activeProjects = sanityProjects
+        ? [
+            ...sanityProjects,
+            ...localProjects.filter(localProject => (
+                !sanityProjects.some(project => project.id === localProject.id)
+            ))
+        ]
+        : FALLBACK_PROJECTS;
 
     useEffect(() => {
         const mq = window.matchMedia('(hover: hover)');
@@ -840,15 +904,15 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                     });
 
                     timeline.to(paperRef.current.rotation, {
-                        x: 0.5,
-                        z: -0.05,
+                        x: project.imageOnly ? 0 : 0.5,
+                        z: project.imageOnly ? 0 : -0.05,
                         duration: 0.15,
                         ease: 'power2.out'
                     }, '<');
 
                     if (materialRef.current) {
                         timeline.to(materialRef.current, {
-                            bend: 0.8,
+                            bend: project.imageOnly ? 0 : 0.8,
                             duration: 0.15,
                             ease: 'power2.out'
                         }, '<');
@@ -874,16 +938,16 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                     });
 
                     timeline.to(paperRef.current.rotation, {
-                        x: Math.PI * 0.8,
-                        z: 0.05,
-                        y: -0.02,
+                        x: project.imageOnly ? 0 : Math.PI * 0.8,
+                        z: project.imageOnly ? 0 : 0.05,
+                        y: project.imageOnly ? 0 : -0.02,
                         duration: 0.4,
                         ease: 'power1.inOut'
                     }, '<');
 
                     if (materialRef.current) {
                         timeline.to(materialRef.current, {
-                            bend: -0.3,
+                            bend: project.imageOnly ? 0 : -0.3,
                             duration: 0.4,
                             ease: 'power1.inOut'
                         }, '<');
@@ -898,7 +962,7 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                     });
 
                     timeline.to(paperRef.current.rotation, {
-                        x: Math.PI,
+                        x: project.imageOnly ? 0 : Math.PI,
                         y: 0,
                         z: 0,
                         duration: 0.4,
@@ -1143,7 +1207,7 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                 </mesh>
 
                 {/* === PRZYCISK: OPEN NA PLECACH KARTKI === */}
-                <group
+                {!project.imageOnly && <group
                     ref={buttonGroupRef}
                     position={[0, 0.75, 0]}
                     rotation={[Math.PI, 0, 0]}
@@ -1197,10 +1261,10 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                         <planeGeometry args={[1.2, 1.2 / 3.613]} />
                         <meshBasicMaterial color="#e0e0e0" transparent={true} opacity={0} />
                     </mesh>
-                </group>
+                </group>}
 
                 {/* === TEKST NA PLECACH KARTKI (PROJECT DETAILS) === */}
-                <group
+                {!project.imageOnly && <group
                     ref={detailsGroupRef}
                     position={[0, -0.5, 0]} // Miejsce u góry (gdy Y=0.75 to dół, to Y=-0.4 to góra)
                     rotation={[Math.PI, 0, 0]}
@@ -1233,10 +1297,10 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                     >
                         {project.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco."}
                     </Text>
-                </group>
+                </group>}
 
                 {/* === SEKCJA TECH STACK NA PLECACH KARTKI === */}
-                <group
+                {!project.imageOnly && <group
                     ref={techStackGroupRef}
                     position={[0, 0.30, 0]} // Pomiędzy Project Details a przyciskiem Open Project
                     rotation={[Math.PI, 0, 0]}
@@ -1267,7 +1331,7 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                             );
                         })}
                     </group>
-                </group>
+                </group>}
 
                 {/* 
                   === TEKST / TYTUŁY PROJEKTÓW ===
@@ -1282,7 +1346,7 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                   color: kolor napisu
                   font: opcjonalnie dajesz tu inną czcionkę z folderu /public/fonts/
                 */}
-                <Text
+                {!project.imageOnly && <Text
                     ref={textRef}
                     position={[0, 0.7, 0]} // Tylko dwa pierwsze parametry [X, Y] mają tutaj znaczenie
                     fontSize={0.20}
@@ -1293,7 +1357,7 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                     fillOpacity={0} // Start hidden
                 >
                     {project.title}
-                </Text>
+                </Text>}
 
                 <PositionalAudio
                     ref={paperAudioRef}
