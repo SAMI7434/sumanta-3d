@@ -33,11 +33,8 @@ const EntranceDoors = ({
     const leftDoorMaterialRef = useRef(); // Left door reveal control
     const leftHandleMaterialRef = useRef(); // Left handle reveal control
     const rightHandleMaterialRef = useRef(); // Right handle reveal control
-    const leftHandlePaintedRef = useRef(); // Painted handle mesh visibility
-    const rightHandlePaintedRef = useRef(); // Painted handle mesh visibility
     const groupRef = useRef();
     const [isOpen, setIsOpen] = useState(false);
-    const [isHovered, setIsHovered] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
     const [isWindowHovered, setIsWindowHovered] = useState(false);
     const windowAvatarRef = useRef();
@@ -59,12 +56,8 @@ const EntranceDoors = ({
     const doorRightTexture = useTexture('/textures/doors/door_right_sketch.webp');
 
     // Mobile optimization: Don't load painted textures or handles on phones
-    const doorRightPaintedTexture = useTexture(isMobileDevice ? dummyTex : '/textures/doors/door_right_painted.webp');
-    const doorLeftPaintedTexture = useTexture(isMobileDevice ? dummyTex : '/textures/doors/door_left_painted.webp');
     const handleLeftTexture = useTexture('/textures/doors/handle_left_sketch.webp');
-    const handleLeftPaintedTexture = useTexture(isMobileDevice ? dummyTex : '/textures/doors/handle_left_painted.webp');
     const handleRightTexture = useTexture('/textures/doors/handle_right_sketch.webp');
-    const handleRightPaintedTexture = useTexture(isMobileDevice ? dummyTex : '/textures/doors/handle_right_painted.webp');
 
     // Dynamic textures for mobile
     const doorBackTexture = useTexture(isMobileDevice ? '/textures/doors/door_back.webp' : '/textures/doors/door_back_left_sketch.webp');
@@ -94,7 +87,6 @@ const EntranceDoors = ({
     const [textVisible, setTextVisible] = useState(false);
     const [clipProgress, setClipProgress] = useState(0); // 0-1 for pencil drawing reveal
     const inkSplashRef = useRef();
-    const handleHideDelayRef = useRef(); // Track pending gsap.delayedCall for handle visibility
     const bugFixedTextRef = useRef();
     const bugClickPos = useRef({ x: 0, y: 0 }); // Store click position
 
@@ -307,163 +299,6 @@ const EntranceDoors = ({
         }, 0.3);
     };
 
-    // Handle hover - doors slightly open to indicate interactivity
-    const handlePointerEnter = () => {
-        if (isOpen || isAnimating || isMobile) return;
-        setIsHovered(true);
-        document.body.style.cursor = "pointer";
-
-        // Slightly open doors on hover
-        gsap.to(leftDoorRef.current.rotation, {
-            y: -0.08,
-            duration: 0.3,
-            ease: 'power2.out',
-            overwrite: true
-        });
-        gsap.to(rightDoorRef.current.rotation, {
-            y: 0.08,
-            duration: 0.3,
-            ease: 'power2.out',
-            overwrite: true
-        });
-
-        // Rotate handles down slightly (hint effect)
-        if (leftHandleRef.current) {
-            gsap.to(leftHandleRef.current.rotation, {
-                z: 0.1,
-                duration: 0.2,
-                ease: 'power2.out',
-                overwrite: true
-            });
-        }
-        if (rightHandleRef.current) {
-            gsap.to(rightHandleRef.current.rotation, {
-                z: -0.1,
-                duration: 0.2,
-                ease: 'power2.out',
-                overwrite: true
-            });
-        }
-
-        // Brush-stroke reveal: discard sketch pixels to show painted door beneath
-        if (rightDoorMaterialRef.current) {
-            gsap.to(rightDoorMaterialRef.current, {
-                uProgress: 1.0,
-                duration: 0.8,
-                ease: 'power2.out',
-                overwrite: true
-            });
-        }
-        if (leftDoorMaterialRef.current) {
-            gsap.to(leftDoorMaterialRef.current, {
-                uProgress: 1.0,
-                duration: 0.8,
-                ease: 'power2.out',
-                overwrite: true
-            });
-        }
-        if (leftHandleMaterialRef.current) {
-            gsap.to(leftHandleMaterialRef.current, {
-                uProgress: 1.0,
-                duration: 0.8,
-                ease: 'power2.out',
-                overwrite: true
-            });
-        }
-        if (rightHandleMaterialRef.current) {
-            gsap.to(rightHandleMaterialRef.current, {
-                uProgress: 1.0,
-                duration: 0.8,
-                ease: 'power2.out',
-                overwrite: true
-            });
-        }
-        // Show painted handles (kill any pending hide from previous leave)
-        if (handleHideDelayRef.current) handleHideDelayRef.current.kill();
-        if (leftHandlePaintedRef.current) leftHandlePaintedRef.current.visible = true;
-        if (rightHandlePaintedRef.current) rightHandlePaintedRef.current.visible = true;
-    };
-
-    const handlePointerLeave = () => {
-        if (isOpen || isAnimating || isMobile) return;
-        setIsHovered(false);
-        document.body.style.cursor = "auto";
-
-        // Close doors back
-        gsap.to(leftDoorRef.current.rotation, {
-            y: 0,
-            duration: 0.3,
-            ease: 'power2.out',
-            overwrite: true
-        });
-        gsap.to(rightDoorRef.current.rotation, {
-            y: 0,
-            duration: 0.3,
-            ease: 'power2.out',
-            overwrite: true
-        });
-
-        // Reset handles
-        if (leftHandleRef.current) {
-            gsap.to(leftHandleRef.current.rotation, {
-                z: 0,
-                duration: 0.2,
-                ease: 'power2.out',
-                overwrite: true
-            });
-        }
-        if (rightHandleRef.current) {
-            gsap.to(rightHandleRef.current.rotation, {
-                z: 0,
-                duration: 0.2,
-                ease: 'power2.out',
-                overwrite: true
-            });
-        }
-
-        // Reverse brush-stroke reveal
-        if (rightDoorMaterialRef.current) {
-            gsap.to(rightDoorMaterialRef.current, {
-                uProgress: 0.0,
-                duration: 0.5,
-                ease: 'power2.out',
-                overwrite: true
-            });
-        }
-        if (leftDoorMaterialRef.current) {
-            gsap.to(leftDoorMaterialRef.current, {
-                uProgress: 0.0,
-                duration: 0.5,
-                ease: 'power2.out',
-                overwrite: true
-            });
-        }
-        if (leftHandleMaterialRef.current) {
-            gsap.to(leftHandleMaterialRef.current, {
-                uProgress: 0.0,
-                duration: 0.5,
-                ease: 'power2.out',
-                overwrite: true
-            });
-        }
-        if (rightHandleMaterialRef.current) {
-            gsap.to(rightHandleMaterialRef.current, {
-                uProgress: 0.0,
-                duration: 0.5,
-                ease: 'power2.out',
-                overwrite: true
-            });
-        }
-
-        // Hide painted handles after reverse animation completes
-        handleHideDelayRef.current = gsap.delayedCall(0.55, () => {
-            if (leftHandlePaintedRef.current) leftHandlePaintedRef.current.visible = false;
-            if (rightHandlePaintedRef.current) rightHandlePaintedRef.current.visible = false;
-        });
-    };
-
-
-
     // --- Cat Eye Tracking Logic ---
     useFrame((state) => {
         if (!leftPupilRef.current || !rightPupilRef.current) return;
@@ -642,25 +477,10 @@ const EntranceDoors = ({
                 <mesh
                     position={[doorWidth / 2, 0, 0.06]}
                     onClick={handleClick}
-                    onPointerEnter={handlePointerEnter}
-                    onPointerLeave={handlePointerLeave}
                 >
                     <boxGeometry args={[doorWidth, doorHeight, 0.04]} />
                     <meshBasicMaterial color="#e0e0e0" map={edgeTexture} roughness={0.9} />
                 </mesh>
-
-                {/* Painted layer (behind sketch) - left door */}
-                {!isMobile && (
-                    <mesh position={[doorWidth / 2, 0, 0.088]}>
-                        <planeGeometry args={[doorWidth, doorHeight]} />
-                        <meshBasicMaterial color="#e0e0e0"
-                            map={doorLeftPaintedTexture}
-                            transparent={true}
-                            alphaTest={0.5}
-                            roughness={0.8}
-                        />
-                    </mesh>
-                )}
 
                 {/* Sketch overlay (front) - left door brush-stroke reveal */}
                 <mesh position={[doorWidth / 2, 0, 0.09]}>
@@ -690,18 +510,6 @@ const EntranceDoors = ({
 
                 {/* Handle Layer (animated) - pivot at screw center (292,459 on 332x848 texture) */}
                 <group ref={leftHandleRef} position={[doorWidth / 2 + 0.357, -0.099, 0.10]}>
-                    {/* Painted handle (behind) - hidden until hover */}
-                    {!isMobile && (
-                        <mesh ref={leftHandlePaintedRef} position={[-0.357, 0.09, -0.001]} visible={false}>
-                            <planeGeometry args={[doorWidth, doorHeight]} />
-                            <meshBasicMaterial color="#e0e0e0"
-                                map={handleLeftPaintedTexture}
-                                transparent={true}
-                                alphaTest={0.5}
-                                depthWrite={false}
-                            />
-                        </mesh>
-                    )}
                     {/* Sketch handle overlay (front) */}
                     <mesh position={[-0.357, 0.099, 0]}>
                         <planeGeometry args={[doorWidth, doorHeight]} />
@@ -723,25 +531,10 @@ const EntranceDoors = ({
                 <mesh
                     position={[-doorWidth / 2, 0, 0.06]}
                     onClick={handleClick}
-                    onPointerEnter={handlePointerEnter}
-                    onPointerLeave={handlePointerLeave}
                 >
                     <boxGeometry args={[doorWidth, doorHeight, 0.04]} />
                     <meshBasicMaterial color="#e0e0e0" map={edgeTexture} roughness={0.9} />
                 </mesh>
-
-                {/* Painted layer (behind sketch) - revealed when sketch fades out on hover */}
-                {!isMobile && (
-                    <mesh position={[-doorWidth / 2, 0, 0.088]}>
-                        <planeGeometry args={[doorWidth, doorHeight]} />
-                        <meshBasicMaterial color="#e0e0e0"
-                            map={doorRightPaintedTexture}
-                            transparent={true}
-                            alphaTest={0.5}
-                            roughness={0.8}
-                        />
-                    </mesh>
-                )}
 
                 {/* Sketch overlay (front) - brush-stroke discard reveals painted beneath */}
                 <mesh position={[-doorWidth / 2, 0, 0.09]}>
@@ -770,18 +563,6 @@ const EntranceDoors = ({
 
                 {/* Handle Layer (animated) - pivot at screw center (40,459 on 332x848 texture) */}
                 <group ref={rightHandleRef} position={[-doorWidth / 2 - 0.357, -0.099, 0.10]}>
-                    {/* Painted handle (behind) - hidden until hover */}
-                    {!isMobile && (
-                        <mesh ref={rightHandlePaintedRef} position={[0.357, 0.09, -0.001]} visible={false}>
-                            <planeGeometry args={[doorWidth, doorHeight]} />
-                            <meshBasicMaterial color="#e0e0e0"
-                                map={handleRightPaintedTexture}
-                                transparent={true}
-                                alphaTest={0.5}
-                                depthWrite={false}
-                            />
-                        </mesh>
-                    )}
                     {/* Sketch handle overlay (front) */}
                     <mesh position={[0.357, 0.099, 0]}>
                         <planeGeometry args={[doorWidth, doorHeight]} />

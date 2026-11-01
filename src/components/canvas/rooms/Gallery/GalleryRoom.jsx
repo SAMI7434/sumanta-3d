@@ -14,9 +14,6 @@ import { useAudio } from '../../../../context/AudioManager';
 import { usePaintMaterial } from './usePaintMaterial';
 import { useGalleryProjects } from '../../../../hooks/useSanityData';
 
-// Reusable Vector3 to avoid allocations in useFrame
-const _tempScale = new THREE.Vector3();
-
 // ============================================
 // ⚙️ AUDIO SETTINGS - TWEAK HERE
 // Edytuj te wartości, aby zmienić głośność i zasięg słyszalności szumu miasta
@@ -74,12 +71,13 @@ const FALLBACK_PROJECTS = [
     {
         id: 'project-3',
         title: 'PROJECT 3',
-        front: '/textures/gallery/3.webp',
-        painted: '/textures/gallery/3.webp',
-        url: '/textures/gallery/3.webp',
+        front: '/images/3.jpg',
+        painted: '/images/3.jpg',
+        url: '/images/3.jpg',
         description: 'A new project added to the gallery.',
         techStack: [],
-        imageOnly: true
+        imageOnly: true,
+        preserveOriginal: true
     },
     {
         id: 'dr-sumit-4',
@@ -123,8 +121,10 @@ const FALLBACK_PROJECTS = [
     },
 ];
 
+const ORIGINAL_PROJECT_3 = FALLBACK_PROJECTS.find(project => project.id === 'project-3');
 const PROJECT_COUNT = 10; // Keep the count for the infinite scroll feel
 const GAP = 2.5;
+const ORIGINAL_IMAGE_ASPECT = 734 / 1080;
 
 // Zmień te wartości aby dopasować proporcje ptaka (legacy ratio 1.41)
 const BIRD_WIDTH = 0.49;
@@ -269,7 +269,9 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
     ].includes(project.id));
     const activeProjects = sanityProjects
         ? [
-            ...sanityProjects,
+            ...sanityProjects.map(project => (
+                project.id === ORIGINAL_PROJECT_3.id ? ORIGINAL_PROJECT_3 : project
+            )),
             ...localProjects.filter(localProject => (
                 !sanityProjects.some(project => project.id === localProject.id)
             ))
@@ -325,6 +327,7 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
             // Configure textures
             if (frontTex) {
                 frontTex.colorSpace = THREE.SRGBColorSpace;
+                frontTex.needsUpdate = true;
                 // frontTex.encoding = THREE.sRGBEncoding;
             }
             if (paintedTex) {
@@ -584,7 +587,6 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                             isSelected={selectedCard === i}
                             scrollToIndex={scrollToIndex}
                             onClick={handleCardClick}
-                            isMobile={!canHover} // Use hover capability for mobile behavior logic
                             isTransitioning={isTransitioning} // Pass down to lock out individual pointer events just in case
                             paintProgress={uniformsData.uPaintProgress}
                             roomOrigin={uniformsData.uRoomOrigin}
@@ -751,7 +753,7 @@ const FlyingBird = ({ texture }) => {
 };
 
 // Sub-component for individual project cards
-const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, currentScroll, materials, curve, isSelected, scrollToIndex, onClick, isMobile, isTransitioning, paintProgress, roomOrigin }, ref) => {
+const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, currentScroll, materials, curve, isSelected, scrollToIndex, onClick, isTransitioning, paintProgress, roomOrigin }, ref) => {
     const cardRef = useRef();
     const paperRef = useRef(); // Ref for the moving part (Paper)
     const materialRef = useRef();
@@ -763,8 +765,6 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
     const detailsTextRef2 = useRef();
     const techTextRef = useRef();
     const openTextRef = useRef();
-    const [hovered, setHovered] = useState(false);
-    const [btnHovered, setBtnHovered] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);  // True ONLY during flip animation
     const [isScrolling, setIsScrolling] = useState(false);  // True during scroll phase
 
@@ -978,9 +978,9 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                     }
 
                     timeline.to(paperRef.current.scale, {
-                        x: 1.1,
-                        y: 1.1,
-                        z: 1.1,
+                        x: project.imageOnly ? 1 : 1.1,
+                        y: project.imageOnly ? 1 : 1.1,
+                        z: project.imageOnly ? 1 : 1.1,
                         duration: 0.3,
                         ease: 'sine.out'
                     }, '-=0.4');
@@ -993,18 +993,6 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
         e.stopPropagation();
         if (onClick) onClick(index);
     };
-
-    // Cursor change on hover
-    useEffect(() => {
-        if (btnHovered && isSelected) {
-            document.body.style.cursor = 'pointer';
-        } else if (hovered && !isSelected) {
-            document.body.style.cursor = 'pointer';
-        } else {
-            document.body.style.cursor = 'auto';
-        }
-        return () => { document.body.style.cursor = 'auto'; };
-    }, [hovered, isSelected, btnHovered]);
 
     useFrame((state) => {
         if (!cardRef.current) return;
@@ -1072,9 +1060,6 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
             const dz_dy = 2.0 * y * uBend + 2.0 * Math.cos(uTime * 2.0 + y * 2.0) * totalWind * (1.0 + Math.abs(uBend * 3.0));
             buttonGroupRef.current.rotation.x = Math.PI + Math.atan(dz_dy);
 
-            // Hover animacja powiększania dla przycisku (napis się powiększa)
-            const targetScale = btnHovered ? 1.08 : 1;
-            buttonGroupRef.current.scale.lerp(_tempScale.set(targetScale, targetScale, 1), 0.15);
         }
 
         // --- Zrównaj pozycję górnego opisu (PROJECT DETAILS) ---
@@ -1144,36 +1129,6 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
         <group
             ref={cardRef}
             onClick={handleClick}
-            onPointerEnter={(e) => {
-                if (isMobile || isTransitioning) return;
-                e.stopPropagation();
-                setHovered(true);
-
-                // Brush reveal animation
-                if (materialRef.current && project.paintedTexture && !isSelected) {
-                    gsap.to(materialRef.current, {
-                        uProgress: 1.0,
-                        duration: 0.8,
-                        ease: 'power2.out',
-                        overwrite: 'auto'
-                    });
-                }
-            }}
-            onPointerLeave={(e) => {
-                if (isMobile || isTransitioning) return;
-                e.stopPropagation();
-                setHovered(false);
-
-                // Reverse brush reveal animation ONLY if NOT selected
-                if (materialRef.current && project.paintedTexture && !isSelected) {
-                    gsap.to(materialRef.current, {
-                        uProgress: 0.0,
-                        duration: 0.5,
-                        ease: 'power2.out',
-                        overwrite: 'auto'
-                    });
-                }
-            }}
         >
             {/* Clothespin (Top Center) - Does NOT move with paperRef */}
             <mesh position={[0, -0.08, 0.15]} rotation={[0, 0, Math.PI]}>
@@ -1192,18 +1147,33 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                 position={[0, -1.1, 0]}
             >
                 <mesh>
-                    <planeGeometry args={[1.5, 2, 16, 16]} />
-                    <PaperMaterial
-                        ref={materialRef}
-                        color="#ffffff"
-                        map={project.frontTexture}
-                        mapBack={project.backTexture}
-                        mapPainted={project.paintedTexture}
-                        side={THREE.DoubleSide}
-                        roughness={0.6}
-                        paintProgress={paintProgress}
-                        roomOrigin={roomOrigin}
-                    />
+                    <planeGeometry args={[
+                        project.imageOnly ? 1.5 : 1.5,
+                        project.imageOnly ? 1.5 / ORIGINAL_IMAGE_ASPECT : 2,
+                        16,
+                        16
+                    ]} />
+                    {project.preserveOriginal ? (
+                            <meshBasicMaterial
+                                color="#ffffff"
+                                map={project.frontTexture}
+                                side={THREE.DoubleSide}
+                                toneMapped={false}
+                                fog={false}
+                            />
+                        ) : (
+                            <PaperMaterial
+                                ref={materialRef}
+                                color="#ffffff"
+                                map={project.frontTexture}
+                                mapBack={project.backTexture}
+                                mapPainted={project.paintedTexture}
+                                side={THREE.DoubleSide}
+                                roughness={0.6}
+                                paintProgress={paintProgress}
+                                roomOrigin={roomOrigin}
+                            />
+                        )}
                 </mesh>
 
                 {/* === PRZYCISK: OPEN NA PLECACH KARTKI === */}
@@ -1227,7 +1197,7 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                         ref={openTextRef}
                         position={[0, 0, 0.01]}
                         fontSize={0.11}
-                        color={btnHovered ? "#333333" : "#1c1c1c"}
+                        color="#1c1c1c"
                         font="/fonts/CabinSketch-Bold.ttf"
                         anchorX="center"
                         anchorY="middle"
@@ -1244,18 +1214,6 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                                 e.stopPropagation();
                                 window.open(project.url, '_blank');
                             }
-                        }}
-                        onPointerEnter={(e) => {
-                            if (isSelected && !isTransitioning) {
-                                e.stopPropagation();
-                                setBtnHovered(true);
-                            }
-                        }}
-                        onPointerLeave={(e) => {
-                            if (isSelected && !isTransitioning) {
-                                e.stopPropagation();
-                            }
-                            setBtnHovered(false);
                         }}
                     >
                         <planeGeometry args={[1.2, 1.2 / 3.613]} />

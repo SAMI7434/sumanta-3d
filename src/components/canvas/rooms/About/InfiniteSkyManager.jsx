@@ -365,7 +365,7 @@ const IntroMilestone = ({ z, scrollProgressRef }) => {
                 anchorY="middle"
                 font="/fonts/CabinSketch-Regular.ttf"
             >
-                (ITOM)
+                (SUMANTA)
             </Text>
 
             {/* Avatar on cloud - floating + spreads up-left */}
