@@ -276,6 +276,8 @@ export const STUDIO_TEXTURES = [
     '/textures/studio/tvfront_filmikprojektdlamultiego_painted.webp',
     '/textures/studio/tvfront_haircuts.webp',
     '/textures/studio/tvfront_haircuts_painted.webp',
+    '/textures/studio/tvfront_67x.webp',
+    '/textures/studio/tvfront_67x_painted.webp',
 ];
 
 // ============================================

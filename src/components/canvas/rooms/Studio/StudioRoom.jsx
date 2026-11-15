@@ -118,9 +118,9 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 return {
                     ...item,
                     imageOnly: true,
-                    frontTexture: '/textures/studio/tvfront_haircuts.webp',
-                    paintedFrontTexture: '/textures/studio/tvfront_haircuts_painted.webp',
-                    cardImage: '/images/studio_haircuts.png',
+                    frontTexture: '/textures/studio/tvfront_67x.webp',
+                    paintedFrontTexture: '/textures/studio/tvfront_67x_painted.webp',
+                    cardImage: 'samiran',
                     url: null,
                 };
             }
