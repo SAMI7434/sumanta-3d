@@ -49,7 +49,7 @@ const FALL_SPEED = 0.3; // How fast monitors fall down
 const TOWER_HEIGHT = 12; // Total visible height of tower
 const VERTICAL_SPACING = 2.5; // Space between monitor rings
 const TOWER_Y_START = -5; // Starting Y offset for tower (negative = lower) -> CONTROLS HEIGHT (UP/DOWN)
-const TOWER_Z_START = -10; // Starting Z position (negative = further away) -> CONTROLS DISTANCE
+const TOWER_Z_START = -20; // Starting Z position (negative = further away) -> CONTROLS DISTANCE
 
 const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
     const groupRef = useRef();
@@ -109,7 +109,32 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
 
     // Pobieranie danych z Sanity.io (fallback do starych danych)
     const sanityContent = useStudioContent();
-    const activeContent = sanityContent || CONTENT_DATA;
+    const activeContent = useMemo(() => {
+        if (!sanityContent) return CONTENT_DATA;
+
+        return sanityContent.map((item) => {
+            const title = item.title?.trim().toLowerCase();
+            if (title === 'my youtube') {
+                return {
+                    ...item,
+                    imageOnly: true,
+                    frontTexture: '/textures/studio/tvfront_haircuts.webp',
+                    paintedFrontTexture: '/textures/studio/tvfront_haircuts_painted.webp',
+                    cardImage: '/images/studio_haircuts.png',
+                    url: null,
+                };
+            }
+
+            if (item.platform !== 'codrops' && !title.includes('sketchbook')) return item;
+
+            return {
+                ...item,
+                imageOnly: true,
+                cardImage: '/images/image.png',
+                url: null,
+            };
+        });
+    }, [sanityContent]);
 
     const audioRef = useRef();
     useEffect(() => {
@@ -864,4 +889,3 @@ const MonitorBlock = memo(({ item, meshRef, isSelected, onMonitorClick, disabled
 });
 
 export default StudioRoom;
-

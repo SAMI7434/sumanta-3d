@@ -367,7 +367,7 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                     }} />
 
                     {/* Header */}
-                    <div style={{
+                    {!content.imageOnly && <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'flex-start',
@@ -404,7 +404,7 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                                 <path d="M18 6L6 18M6 6l12 12" />
                             </svg>
                         </button>
-                    </div>
+                    </div>}
 
                     {/* === LAYOUT: CERTIFICATE GRID === */}
                     {content.layout === 'certificate_grid' ? (
@@ -494,6 +494,30 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                                 </div>
                             )}
                         </div>
+                    ) : content.imageOnly ? (
+                        <>
+                            <button
+                                onClick={onClose}
+                                className="studio-close-btn"
+                                aria-label="Close"
+                                style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 2 }}
+                            >
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M18 6L6 18M6 6l12 12" />
+                                </svg>
+                            </button>
+                            <img
+                                src={content.cardImage || content.frontTexture}
+                                alt={content.title}
+                                style={{
+                                    display: 'block',
+                                    width: '100%',
+                                    maxHeight: '75vh',
+                                    objectFit: 'contain',
+                                    border: '2px solid #1a1a1a',
+                                }}
+                            />
+                        </>
                     ) : (
                         /* === LAYOUT: DEFAULT (The Studio Style) === */
                         <>

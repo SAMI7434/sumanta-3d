@@ -274,6 +274,8 @@ export const STUDIO_TEXTURES = [
     '/textures/studio/tvfront_filmikedytowaniezdjec_painted.webp',
     '/textures/studio/tvfront_filmikprojektdlamultiego.webp',
     '/textures/studio/tvfront_filmikprojektdlamultiego_painted.webp',
+    '/textures/studio/tvfront_haircuts.webp',
+    '/textures/studio/tvfront_haircuts_painted.webp',
 ];
 
 // ============================================
